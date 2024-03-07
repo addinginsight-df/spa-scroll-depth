@@ -1,0 +1,55 @@
+<script>
+// Define the pagescroll object and function for initialization/reset
+var pagescroll = {};
+function resetPagescroll() {
+    pagescroll = {
+        scrollDepths: [0.25, 0.50, 0.75, 0.90, 1.00], // Custom scroll depths
+        scrollDepthTriggers: {} // Tracks which depths have been triggered
+    };
+    // Initialize scrollDepthTriggers to false for each depth
+    for (var i = 0; i < pagescroll.scrollDepths.length; i++) {
+        var depth = pagescroll.scrollDepths[i];
+        pagescroll.scrollDepthTriggers[depth] = false;
+    }
+}
+resetPagescroll(); // Reset on script load
+
+// Utility functions for document and viewport measurements
+function SCDocHeight() {
+    return Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+}
+function SCCurrentPosition() {
+    return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
+}
+function SCViewportHeight() {
+    return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+}
+
+// Function to check and trigger custom scroll depths
+function checkScrollDepths() {
+    var currentPosition = SCCurrentPosition();
+    var totalHeight = SCDocHeight() - SCViewportHeight(); // Total scrollable height
+    var scrolledRatio = currentPosition / totalHeight;
+
+    for (var i = 0; i < pagescroll.scrollDepths.length; i++) {
+        var depth = pagescroll.scrollDepths[i];
+        if (scrolledRatio >= depth && !pagescroll.scrollDepthTriggers[depth]) {
+            // Trigger dataLayer push for this depth
+            window.dataLayer.push({event: "scroll", scroll_depth: Math.round(depth * 100) + "%"});
+            pagescroll.scrollDepthTriggers[depth] = true; // Mark as triggered
+        }
+    }
+}
+
+// Attach event listener to window scroll event
+if (window.addEventListener) {
+    window.addEventListener('scroll', checkScrollDepths, false);
+} else if (window.attachEvent) { // For IE 8 and earlier versions
+    window.attachEvent('onscroll', checkScrollDepths);
+}
+
+// Optional: Reset scroll tracking on SPA page transitions or specific events
+function resetScrollTracking() {
+    resetPagescroll(); // Call this function on SPA page transitions or when needed
+}
+</script>
